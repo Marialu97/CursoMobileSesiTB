@@ -33,3 +33,10 @@ screens
         -home_screen.dart
         -add_pet_screen.dart
 
+escreve 
+        -db_helper.dart
+
+    Cria
+    no screens
+    -pet_detalhe_screen.dart ESCREVE 
+    add_consulta_screen.dart ESCREVE

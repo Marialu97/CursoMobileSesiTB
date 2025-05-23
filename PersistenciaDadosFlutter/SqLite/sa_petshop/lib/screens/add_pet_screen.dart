@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:sa_petshop/controllers/pets_controller.dart';
 import 'package:sa_petshop/models/pet_model.dart';
+import 'package:sa_petshop/screens/home_screen.dart';
 
 class AddPetScreen extends StatefulWidget {
   @override
@@ -30,7 +31,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
       //mando para o banco
       await _petsController.addPet(newPet);
-      Navigator.pop(context); //Retorna para a Tela Anterior
+      Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen())); //Retorna para a Tela Anterior
     }
   }
 
@@ -73,3 +74,4 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 }
+
