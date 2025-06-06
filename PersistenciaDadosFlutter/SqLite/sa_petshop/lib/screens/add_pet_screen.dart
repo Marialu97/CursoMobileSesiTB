@@ -11,18 +11,19 @@ class AddPetScreen extends StatefulWidget {
 }
 
 class _AddPetScreenState extends State<AddPetScreen> {
+  
   final _formKey = GlobalKey<FormState>(); //chave para o Formulário
   final _petsController = PetsController();
 
-  String _nome = "";
+  late String _nome;
   String _raca = "";
   String _nomeDono = "";
   String _telefoneDono = "";
 
   Future<void> _salvarPet() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      final newPet = Pet(
+        _formKey.currentState!.save();
+        final newPet = Pet(
         nome: _nome,
         raca: _raca,
         nomeDono: _nomeDono,
@@ -30,12 +31,18 @@ class _AddPetScreenState extends State<AddPetScreen> {
       );
 
       //mando para o banco
-      await _petsController.addPet(newPet);
+      try {
+        await _petsController.addPet(newPet);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Exception: $e"))
+        );
+      }
       Navigator.push(context, MaterialPageRoute(builder: (context)=>HomeScreen())); //Retorna para a Tela Anterior
     }
   }
 
-  @override
+  @override //build da Tela
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
@@ -66,7 +73,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
                 validator: (value) => value!.isEmpty ? "Campo não Preenchido!!!" : null,
                 onSaved: (value) => _telefoneDono = value!,
               ),
-             ElevatedButton(onPressed: _salvarPet, child: Text("Salvar"))
+              ElevatedButton(onPressed: _salvarPet, child: Text("Salvar"))
 
             ],
           )),
@@ -74,4 +81,3 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 }
-

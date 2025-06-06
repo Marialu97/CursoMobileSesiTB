@@ -5,7 +5,7 @@ class Consulta{
   final int petId; // Chave Estrangeira para o pet
   final DateTime dataHora;
   final String tipoServico;
-  final String? observacao; // pode ser nuld
+  final String observacao; // pode ser nuld
   // ? nao é obrigatoro pode deicaor noulo a informacao 
 
   // CONSTRUTOR 
@@ -14,7 +14,7 @@ class Consulta{
   required this.petId,
   required this.dataHora,
   required this.tipoServico,
-  this.observacao
+  required this.observacao
   });
   // Converter Map: obj => BD 
   Map<String,dynamic> toMap(){
@@ -31,7 +31,7 @@ class Consulta{
     return Consulta(
     id: map["id"] as int,
     petId: map["pet_id"]as int,
-    dataHora: DateTime.parse(map["data_hora"] as String),
+    dataHora: DateTime.parse(map["data_hora"] as String), //converte String para DateTime
     tipoServico: map["tipo_servico"] as String,
     observacao: map["observacao"] as String
     );
