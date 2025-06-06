@@ -40,3 +40,9 @@ escreve
     no screens
     -pet_detalhe_screen.dart ESCREVE 
     add_consulta_screen.dart ESCREVE
+
+
+
+flutter pub add sqflite path path_provider
+flutter pub add intl                  
+    
