@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:seu_app/controllers/listas_controller.dart'; // seu controlador de listas
-import 'package:seu_app/models/lista_model.dart'; // seu modelo Lista
-import 'package:seu_app/screens/add_lista_screen.dart';
-import 'package:seu_app/screens/lista_detalhe_screen.dart';
+import 'package:gerenciador_tarefas/controllers/listas_controller.dart';
+import 'package:gerenciador_tarefas/models/lista_model.dart';
+import 'package:gerenciador_tarefas/screens/lista_detalhe_screen.dart';
+import 'package:gerenciador_tarefas/screens/add_lista_screen.dart';
 
-class ListasScreen extends StatefulWidget {
+
+class HomeScreen extends StatefulWidget {
   @override
-  State<ListasScreen> createState() => _ListasScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _ListasScreenState extends State<ListasScreen> {
-  final ListasController _listasController = ListasController();
-
+class _HomeScreenState extends State<HomeScreen> {
+  final ListasController _controller = ListasController();
   List<Lista> _listas = [];
   bool _isLoading = true;
 
@@ -22,56 +22,45 @@ class _ListasScreenState extends State<ListasScreen> {
   }
 
   Future<void> _loadListas() async {
-    setState(() {
-      _isLoading = true;
-      _listas = [];
-    });
-    try {
-      _listas = await _listasController.fetchListas();
-    } catch (erro) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro: $erro")),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    setState(() => _isLoading = true);
+    _listas = await _controller.buscarListas();
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Minhas Listas")),
+      appBar: AppBar(title: const Text("Listas/Projetos")),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _listas.length,
-              itemBuilder: (context, index) {
-                final lista = _listas[index];
-                return ListTile(
-                  title: Text(lista.nome),
-                  subtitle: Text("Descrição ou outra info aqui"),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ListaDetalheScreen(listaId: lista.id!),
-                    ),
-                  ),
-                );
-              },
-            ),
+          ? const Center(child: CircularProgressIndicator())
+          : _listas.isEmpty
+              ? const Center(child: Text("Nenhuma lista cadastrada."))
+              : ListView.builder(
+                  itemCount: _listas.length,
+                  itemBuilder: (context, index) {
+                    final lista = _listas[index];
+                    return ListTile(
+                      title: Text(lista.nome),
+                      subtitle: Text(lista.descricao),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ListaDetalheScreen(listaId: lista.id!),
+                        ),
+                      ).then((_) => _loadListas()),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
-        tooltip: "Adicionar Nova Lista",
         onPressed: () async {
-          await Navigator.push(
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddListaScreen()),
           );
-          _loadListas(); // recarrega depois de adicionar
+          if (result == true) _loadListas();
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
+        tooltip: "Adicionar Lista",
       ),
     );
   }

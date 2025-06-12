@@ -1,23 +1,21 @@
-import 'package:seu_app/data/database/db_helper.dart';
-import '../models/lista_model.dart';
+import 'package:gerenciador_tarefas/database/db_helper.dart';
+import 'package:gerenciador_tarefas/models/tarefa_model.dart';
 
-class ListasController {
-  // conexão com o banco de dados
+class TarefasController {
   final ListaTarefaDBHelper _dbHelper = ListaTarefaDBHelper();
 
-  Future<int> addLista(Lista lista) async {
-    return await _dbHelper.insertLista(lista);
+  // Busca todas as tarefas de uma lista específica
+  Future<List<Tarefa>> buscarTarefasPorLista(int listaId) async {
+    return await _dbHelper.getTarefasForLista(listaId);
   }
 
-  Future<List<Lista>> fetchListas() async {
-    return await _dbHelper.getListas();
+  // Adiciona uma nova tarefa
+  Future<int> adicionarTarefa(Tarefa tarefa) async {
+    return await _dbHelper.insertTarefa(tarefa);
   }
 
-  Future<Lista?> findListaById(int id) async {
-    return await _dbHelper.getListaById(id);
-  }
-
-  Future<int> deleteLista(int id) async {
-    return await _dbHelper.deleteLista(id);
+  // Remove uma tarefa pelo id
+  Future<int> removerTarefa(int id) async {
+    return await _dbHelper.deleteTarefa(id);
   }
 }

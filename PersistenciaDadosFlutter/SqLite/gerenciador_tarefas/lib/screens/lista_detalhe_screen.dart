@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:seu_app/controllers/consultas_controller.dart'; // ou o equivalente para itens da lista
-import 'package:seu_app/controllers/listas_controller.dart';
-import 'package:seu_app/models/consulta_model.dart'; // ou outro modelo se não usar consultas
-import 'package:seu_app/models/lista_model.dart';
-import 'package:seu_app/screens/add_consulta_screen.dart'; // ou add_item_lista_screen.dart
+import 'package:gerenciador_tarefas/controllers/listas_controller.dart';
+import 'package:gerenciador_tarefas/controllers/tarefas_controller.dart';
+import 'package:gerenciador_tarefas/models/lista_model.dart';
+import 'package:gerenciador_tarefas/models/tarefa_model.dart';
+import 'package:gerenciador_tarefas/screens/add_tarefa_screen.dart';
 
 class ListaDetalheScreen extends StatefulWidget {
   final int listaId;
@@ -21,26 +21,25 @@ class ListaDetalheScreen extends StatefulWidget {
 
 class _ListaDetalheScreenState extends State<ListaDetalheScreen> {
   final ListasController _controllerListas = ListasController();
-  final ConsultasController _controllerConsultas = ConsultasController();
+  final TarefasController _controllerTarefas = TarefasController();
   bool _isLoading = true;
 
   Lista? _lista;
-  List<Consulta> _consultas = []; // adapte para itens que quiser mostrar na lista
+  List<Tarefa> _tarefas = [];
 
   @override
   void initState() {
     super.initState();
-    _loadListaConsultas();
+    _loadListaTarefas();
   }
 
-  Future<void> _loadListaConsultas() async {
+  Future<void> _loadListaTarefas() async {
     setState(() {
       _isLoading = true;
     });
     try {
-      _lista = await _controllerListas.findListaById(widget.listaId);
-      _consultas = await _controllerConsultas.getConsultasByPet(widget.listaId);
-      // adapte essa linha para pegar os itens relacionados à lista
+      _lista = await _controllerListas.buscarListaPorId(widget.listaId);
+      _tarefas = await _controllerTarefas.buscarTarefasPorLista(widget.listaId);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erro: $e")));
     } finally {
@@ -50,16 +49,16 @@ class _ListaDetalheScreenState extends State<ListaDetalheScreen> {
     }
   }
 
-  void _deleteConsulta(int consultaId) async {
+  void _deleteTarefa(int tarefaId) async {
     try {
-      await _controllerConsultas.deleteConsulta(consultaId);
-      await _loadListaConsultas();
+      await _controllerTarefas.removerTarefa(tarefaId);
+      await _loadListaTarefas();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Item deletado com sucesso!")),
+        const SnackBar(content: Text("Tarefa deletada com sucesso!")),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao deletar item: $e")),
+        SnackBar(content: Text("Erro ao deletar tarefa: $e")),
       );
     }
   }
@@ -80,23 +79,25 @@ class _ListaDetalheScreenState extends State<ListaDetalheScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("Nome: ${_lista!.nome}", style: const TextStyle(fontSize: 20)),
-                      Text("Descrição: ${_lista!.descricao}"), // adapte para seus campos
+                      Text("Descrição: ${_lista!.descricao}"),
                       const Divider(),
-                      const Text("Itens:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      _consultas.isEmpty
-                          ? const Center(child: Text("Não existem itens cadastrados para esta lista."))
+                      const Text("Tarefas:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      _tarefas.isEmpty
+                          ? const Center(child: Text("Não existem tarefas cadastradas para esta lista."))
                           : Expanded(
                               child: ListView.builder(
-                                itemCount: _consultas.length,
+                                itemCount: _tarefas.length,
                                 itemBuilder: (context, index) {
-                                  final consulta = _consultas[index];
+                                  final tarefa = _tarefas[index];
                                   return Card(
                                     margin: const EdgeInsets.symmetric(vertical: 4),
                                     child: ListTile(
-                                      title: Text(consulta.tipoServico),
-                                      subtitle: Text(consulta.dataHoraFormata),
+                                      title: Text(tarefa.descricao),
+                                      subtitle: Text(
+                                        "Prioridade: ${tarefa.prioridade}\nVencimento: ${tarefa.dataHoraFormatada}",
+                                      ),
                                       trailing: IconButton(
-                                        onPressed: () => _deleteConsulta(consulta.id!),
+                                        onPressed: () => _deleteTarefa(tarefa.id!),
                                         icon: const Icon(Icons.delete, color: Colors.red),
                                       ),
                                     ),
@@ -112,11 +113,10 @@ class _ListaDetalheScreenState extends State<ListaDetalheScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddConsultaScreen(petId: widget.listaId),
-              // adapte para AddItemListaScreen ou algo parecido
+              builder: (context) => AddTarefaScreen(listaId: widget.listaId),
             ),
           );
-          _loadListaConsultas();
+          _loadListaTarefas();
         },
         child: const Icon(Icons.add),
       ),

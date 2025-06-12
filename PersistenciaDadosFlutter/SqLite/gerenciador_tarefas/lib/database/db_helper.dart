@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:path/path.dart';
-import 'package:seu_app/models/tarefa_model.dart';
-import 'package:seu_app/models/lista_model.dart';
+import 'package:gerenciador_tarefas/models/tarefa_model.dart';
+import 'package:gerenciador_tarefas/models/lista_model.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ListaTarefaDBHelper {
