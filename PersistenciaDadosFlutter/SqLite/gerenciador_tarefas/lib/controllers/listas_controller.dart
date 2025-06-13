@@ -2,25 +2,21 @@ import 'package:gerenciador_tarefas/database/db_helper.dart';
 import 'package:gerenciador_tarefas/models/lista_model.dart';
 
 class ListasController {
-  final ListaTarefaDBHelper _dbHelper = ListaTarefaDBHelper();
+  final ListaTarefasDBHelper _dbHelper = ListaTarefasDBHelper();
 
-  // Busca todas as listas
   Future<List<Lista>> buscarListas() async {
-    return await _dbHelper.getListas();
+    return await _dbHelper.buscarListas();
   }
 
-  // Busca uma lista pelo id
   Future<Lista?> buscarListaPorId(int id) async {
-    return await _dbHelper.getListaById(id);
+    return await _dbHelper.buscarListaPorId(id);
   }
 
-  // Insere uma nova lista
   Future<int> inserirLista(Lista lista) async {
-    return await _dbHelper.insertLista(lista);
+    return await _dbHelper.inserirLista(lista);
   }
 
-  // Deleta uma lista pelo id
   Future<int> deletarLista(int id) async {
-    return await _dbHelper.deleteLista(id);
+    return await _dbHelper.deletarLista(id);
   }
 }

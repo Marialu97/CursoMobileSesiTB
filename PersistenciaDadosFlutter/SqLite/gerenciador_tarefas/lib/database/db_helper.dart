@@ -4,13 +4,15 @@ import 'package:gerenciador_tarefas/models/tarefa_model.dart';
 import 'package:gerenciador_tarefas/models/lista_model.dart';
 import 'package:sqflite/sqflite.dart';
 
-class ListaTarefaDBHelper {
+class ListaTarefasDBHelper {
   static Database? _database;
+  static final ListaTarefasDBHelper _instance = ListaTarefasDBHelper._internal();
 
-  // Singleton
-  static final ListaTarefaDBHelper _instance = ListaTarefaDBHelper._internal();
-  ListaTarefaDBHelper._internal();
-  factory ListaTarefaDBHelper() => _instance;
+  ListaTarefasDBHelper._internal();
+
+  factory ListaTarefasDBHelper() {
+    return _instance;
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -20,58 +22,49 @@ class ListaTarefaDBHelper {
 
   Future<Database> _initDatabase() async {
     final _dbPath = await getDatabasesPath();
-    final path = join(_dbPath, "listas_tarefas.db"); // Nome do novo banco
-
+    final path = join(_dbPath, "listas_tarefas.db");
     return await openDatabase(path, version: 1, onCreate: _onCreateDB);
   }
 
   Future<void> _onCreateDB(Database db, int version) async {
-    // Cria a tabela 'listas'
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS listas(
+      CREATE TABLE IF NOT EXISTS listas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        descricao TEXT NOT NULL,
-        categoria TEXT NOT NULL,
-        cor TEXT NOT NULL
+        titulo TEXT NOT NULL,
+        descricao TEXT
       )
     ''');
-    print("Tabela 'listas' criada com sucesso");
+    print("Tabela listas criada");
 
-    // Cria a tabela 'tarefas'
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS tarefas(
+      CREATE TABLE IF NOT EXISTS tarefas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         lista_id INTEGER NOT NULL,
-        data_hora TEXT NOT NULL,
-        prioridade TEXT NOT NULL,
-        descricao TEXT NOT NULL,
+        titulo TEXT NOT NULL,
+        descricao TEXT,
+        data_vencimento TEXT,
+        prioridade TEXT,
+        status TEXT,
         FOREIGN KEY (lista_id) REFERENCES listas(id) ON DELETE CASCADE
       )
     ''');
-    print("Tabela 'tarefas' criada com sucesso");
+    print("Tabela tarefas criada");
   }
 
-  // CRUD para Listas
-
-  Future<int> insertLista(Lista lista) async {
+  Future<int> inserirLista(Lista lista) async {
     final db = await database;
     return await db.insert("listas", lista.toMap());
   }
 
-  Future<List<Lista>> getListas() async {
+  Future<List<Lista>> buscarListas() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query("listas");
     return maps.map((e) => Lista.fromMap(e)).toList();
   }
 
-  Future<Lista?> getListaById(int id) async {
+  Future<Lista?> buscarListaPorId(int id) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      "listas",
-      where: "id = ?",
-      whereArgs: [id],
-    );
+    final List<Map<String, dynamic>> maps = await db.query("listas", where: "id=?", whereArgs: [id]);
     if (maps.isNotEmpty) {
       return Lista.fromMap(maps.first);
     } else {
@@ -79,31 +72,49 @@ class ListaTarefaDBHelper {
     }
   }
 
-  Future<int> deleteLista(int id) async {
+  Future<int> deletarLista(int id) async {
     final db = await database;
-    return await db.delete("listas", where: "id = ?", whereArgs: [id]);
+    return await db.delete("listas", where: "id=?", whereArgs: [id]);
   }
 
-  // CRUD para Tarefas
-
-  Future<int> insertTarefa(Tarefa tarefa) async {
+  Future<int> inserirTarefa(Tarefa tarefa) async {
     final db = await database;
     return await db.insert("tarefas", tarefa.toMap());
   }
 
-  Future<List<Tarefa>> getTarefasForLista(int listaId) async {
+  Future<List<Tarefa>> buscarTarefasPorLista(int listaId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       "tarefas",
       where: "lista_id = ?",
       whereArgs: [listaId],
-      orderBy: "data_hora ASC",
+      orderBy: "data_vencimento ASC",
     );
     return maps.map((e) => Tarefa.fromMap(e)).toList();
   }
 
-  Future<int> deleteTarefa(int id) async {
+  Future<Tarefa?> buscarTarefaPorId(int id) async {
     final db = await database;
-    return await db.delete("tarefas", where: "id = ?", whereArgs: [id]);
+    final List<Map<String, dynamic>> maps = await db.query("tarefas", where: "id=?", whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return Tarefa.fromMap(maps.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<int> deletarTarefa(int id) async {
+    final db = await database;
+    return await db.delete("tarefas", where: "id=?", whereArgs: [id]);
+  }
+
+  Future<int> atualizarTarefa(Tarefa tarefa) async {
+    final db = await database;
+    return await db.update(
+      "tarefas",
+      tarefa.toMap(),
+      where: "id=?",
+      whereArgs: [tarefa.id],
+    );
   }
 }

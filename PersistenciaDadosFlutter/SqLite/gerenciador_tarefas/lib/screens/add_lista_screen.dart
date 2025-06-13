@@ -13,31 +13,27 @@ class _AddListaScreenState extends State<AddListaScreen> {
   final _formKey = GlobalKey<FormState>();
   final ListasController _controller = ListasController();
 
-  String nome = "";
+  String titulo = "";
   String descricao = "";
-  String categoria = "";
-  String cor = "";
 
   Future<void> _salvarLista() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
       final novaLista = Lista(
-        nome: nome,
+        titulo: titulo,
         descricao: descricao,
-        categoria: categoria,
-        cor: cor,
       );
 
       try {
         await _controller.inserirLista(novaLista);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Lista adicionada com sucesso!")),
+          const SnackBar(content: Text("Lista criada com sucesso!")),
         );
         Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erro ao adicionar lista: $e")),
+          SnackBar(content: Text("Erro ao criar lista: $e")),
         );
       }
     }
@@ -46,7 +42,7 @@ class _AddListaScreenState extends State<AddListaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Nova Lista/Projeto")),
+      appBar: AppBar(title: const Text("Nova Lista")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -54,29 +50,21 @@ class _AddListaScreenState extends State<AddListaScreen> {
           child: ListView(
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: "Nome"),
-                validator: (value) => value!.isEmpty ? "Campo obrigatório" : null,
-                onSaved: (value) => nome = value!,
+                decoration: const InputDecoration(labelText: "Nome da Lista"),
+                validator: (value) =>
+                    value!.isEmpty ? "Por favor, insira um nome" : null,
+                onSaved: (value) => titulo = value!,
               ),
               const SizedBox(height: 10),
               TextFormField(
-                decoration: const InputDecoration(labelText: "Descrição"),
+                decoration: const InputDecoration(labelText: "Descrição (opcional)"),
+                maxLines: 3,
                 onSaved: (value) => descricao = value ?? "",
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Categoria"),
-                onSaved: (value) => categoria = value ?? "",
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Cor"),
-                onSaved: (value) => cor = value ?? "",
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _salvarLista,
-                child: const Text("Adicionar Lista"),
+                child: const Text("Criar Lista"),
               ),
             ],
           ),

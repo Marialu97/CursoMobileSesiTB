@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:gerenciador_tarefas/controllers/tarefas_controller.dart';
 import 'package:gerenciador_tarefas/models/tarefa_model.dart';
-import 'package:gerenciador_tarefas/screens/lista_detalhe_screen.dart';
 
 class AddTarefaScreen extends StatefulWidget {
-  final int listaId; // recebe o id da lista/projeto da tela anterior
+  final int listaId;
 
-  AddTarefaScreen({super.key, required this.listaId});
+  const AddTarefaScreen({super.key, required this.listaId});
 
   @override
   State<AddTarefaScreen> createState() => _AddTarefaScreenState();
@@ -15,22 +14,24 @@ class AddTarefaScreen extends StatefulWidget {
 
 class _AddTarefaScreenState extends State<AddTarefaScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TarefasController _controllerTarefa = TarefasController();
+  final TarefasController _tarefaController = TarefasController();
 
-  String prioridade = "";
-  String descricao = "";
-  DateTime _selectedDate = DateTime.now();
+  late String _titulo;
+  String _descricao = "";
+  DateTime _dataVencimento = DateTime.now();
+  String _prioridade = "Média";
+  String _status = "Pendente";
 
   Future<void> _selecionarData(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _dataVencimento,
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null) {
       setState(() {
-        _selectedDate = picked;
+        _dataVencimento = picked;
       });
     }
   }
@@ -39,27 +40,24 @@ class _AddTarefaScreenState extends State<AddTarefaScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      final newTarefa = Tarefa(
+      final novaTarefa = Tarefa(
         listaId: widget.listaId,
-        dataHora: _selectedDate,
-        prioridade: prioridade,
-        descricao: descricao.isEmpty ? "." : descricao,
+        titulo: _titulo,
+        descricao: _descricao,
+        dataVencimento: _dataVencimento,
+        prioridade: _prioridade,
+        status: _status,
       );
 
       try {
-        await _controllerTarefa.adicionarTarefa(newTarefa);
+        await _tarefaController.adicionarTarefa(novaTarefa);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Tarefa adicionada com sucesso!")),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ListaDetalheScreen(listaId: widget.listaId),
-          ),
-        );
+        Navigator.pop(context, true);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erro ao adicionar tarefa: $e")),
+          SnackBar(content: Text("Erro: $e")),
         );
       }
     }
@@ -67,12 +65,10 @@ class _AddTarefaScreenState extends State<AddTarefaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final DateFormat dataFormatada = DateFormat("dd/MM/yyyy");
+    final DateFormat formatter = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Nova Tarefa"),
-      ),
+      appBar: AppBar(title: const Text("Nova Tarefa")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -80,30 +76,42 @@ class _AddTarefaScreenState extends State<AddTarefaScreen> {
           child: ListView(
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: "Prioridade"),
-                validator: (value) => value!.isEmpty ? "Por favor, insira a prioridade" : null,
-                onSaved: (value) => prioridade = value!,
+                decoration: const InputDecoration(labelText: "Título da Tarefa"),
+                validator: (value) => value!.isEmpty ? "Campo obrigatório!" : null,
+                onSaved: (value) => _titulo = value!,
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: "Descrição"),
+                onSaved: (value) => _descricao = value ?? "",
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: Text("Data de vencimento: ${dataFormatada.format(_selectedDate)}")),
+                  Expanded(
+                    child: Text("Data de Vencimento: ${formatter.format(_dataVencimento)}"),
+                  ),
                   TextButton(
                     onPressed: () => _selecionarData(context),
                     child: const Text("Selecionar Data"),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Descrição"),
-                maxLines: 3,
-                onSaved: (value) => descricao = value!,
+
+              DropdownButtonFormField<String>(
+                value: _status,
+                decoration: const InputDecoration(labelText: "Status"),
+                items: ["Pendente", "Em andamento", "Concluída"].map((String valor) {
+                  return DropdownMenuItem<String>(
+                    value: valor,
+                    child: Text(valor),
+                  );
+                }).toList(),
+                onChanged: (value) => setState(() => _status = value!),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _salvarTarefa,
-                child: const Text("Adicionar Tarefa"),
+                child: const Text("Salvar"),
               ),
             ],
           ),
